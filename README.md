@@ -4,11 +4,16 @@ Vite + React + TypeScript 搭的个人内容工作台。顶部菜单进栏目，
 
 ## 快速开始
 
+包管理器是 **pnpm**（仓库里只有 `pnpm-lock.yaml`，用 npm 装会另生一份 lock 造成漂移）。
+Node 要求 `^20.19.0 || >=22.12.0`（Vite 8 的硬性要求）。
+
 ```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build    # 类型检查 + 打包到 dist/
-npm run preview  # 本地预览打包结果
+corepack enable          # 没装 pnpm 的话先开这个
+pnpm install
+pnpm dev                 # http://localhost:5173
+pnpm build               # 类型检查 + 打包到 dist/
+pnpm preview             # 本地预览打包结果
+pnpm lint                # ESLint 检查
 ```
 
 ## 目录结构
@@ -63,21 +68,137 @@ summary: 一句话摘要      # 不写则自动截取正文首段
 
 路由、左侧列表、首页卡片会自动出现。
 
+## 全站统一深色背景
+
+所有页面共用同一片背景：`src/components/SiteBackground.tsx` 固定在视口底层，
+**挂在 `MainLayout` 而不是某个页面**，所以切路由时不卸载、canvas 只初始化一次。
+
+内容层靠**玻璃拟态**保证可读性——底色不透明度是按信息密度分别定的：
+
+| 区域 | 底色 | 说明 |
+| --- | --- | --- |
+| 侧栏 `.section-aside` | `rgba(11,8,18,.8)` | 列表字号小，透太多会和字符矩阵糊在一起 |
+| 正文 `.section-content` | `rgba(11,8,18,.86)` | 面积大、停留久，再透就伤眼 |
+| 空态 / 404 `.app-main > .empty-state` | `rgba(11,8,18,.75)` | 只有一两行字，可以多透一点 |
+
+> **调这几个值时别手抖。** 0.5 左右字符矩阵会透上来和正文打架，
+> 0.9 以上背景就白做了。0.8~0.86 是实测能兼顾「背景看得见」和「正文读得清」的区间。
+
+早先的版本是「亮色底 + 淡紫极光」，实测极光在米色上几乎没有对比度、看不出在动；
+中间试过「首页深色 / 文档页亮色」的双主题，结果切页像换了两个站——
+所以现在是全站一套。`--ink/--line/--accent` 等变量统一定义在 `:root`，没有分主题覆盖。
+
+## 动效从哪来
+
+首页与文档页的动画全部来自 [React Bits](https://reactbits.dev)（**TS + CSS 变体**，
+MIT + Commons Clause），源码拷贝在 `src/components/bits/`，参数按本站主题调过：
+
+| 组件 | 用在哪 | 依赖 |
+| --- | --- | --- |
+| `Plasma` | 全站背景：紫青流动等离子（WebGL） | `ogl` |
+| `LetterGlitch` | 全站背景叠加：字符乱码矩阵 | 无（canvas 2D） |
+| `DecryptedText` | 首页标题逐字解码 | `motion` |
+| `CountUp` | 首页统计数字滚动 | `motion` |
+| `BorderGlow` | 首页栏目卡片：彩色网格边 + 鼠标锥形边缘光 | 无 |
+| `ClickSpark` | 全局点击迸发火花 | 无 |
+| `AnimatedContent` | 各区块入场 / 文档正文揭示 | `gsap` + ScrollTrigger |
+
+`src/components/SiteBackground.tsx` 是背景层封装：先 `canvas.getContext('webgl')` 探测，
+再给每层套错误边界，**不支持 WebGL 时退回纯 CSS 光晕**——否则 ogl 初始化抛错会把整棵
+React 树带崩成白屏。
+
+两个背景层都是 `lazy()` 加载，首屏先出文字，氛围层随后接管。调参入口：
+
+- **Plasma**：`color` 控色相、`speed` 控流速、`scale` 越小纹理越细密、`opacity` 控强度；
+  `renderScale` / `targetFps` / `iterations` 是性能档位（已从默认 0.55/60/60 降到 0.5/30/48）
+- **LetterGlitch**：`glitchColors` 控字符颜色、`glitchSpeed` 是刷新间隔（越大越慢）。
+  它默认会铺一层**不透明黑底**，叠加时必须传 `backgroundColor="transparent"`
+- **LetterGlitch 的遮罩**在 `global.css` 的 `.site-glitch`：用 `mask-image` 把中心挖空，
+  只在四周显现。不这么做满屏乱码会把标题糊掉
+
+### 对上游源码的两处本地修复
+
+`src/components/bits/LetterGlitch.tsx` 里标了 `【本地修复】`，同步上游时注意保留：
+
+1. `drawLetters` 里上游用 `canvasRef.current!` 非空断言，卸载后 rAF 回调进来会抛
+   `getBoundingClientRect of null`；
+2. cleanup 漏了 `clearTimeout(resizeTimeout)`，导致「改变视口后立刻切路由」时，
+   100ms 防抖回调会在已卸载的组件上执行。
+
+## 按需加载
+
+Vite 生产构建默认就做 tree-shaking，本项目在此之上手动控了三处：
+
+**1. highlight.js 只注册用到的语言。** `MarkdownView.tsx` 里逐个 `import 'highlight.js/lib/languages/xxx'`
+再交给 `rehype-highlight`，而不是 `import hljs from 'highlight.js'`——后者会把 190+ 种语言全打进包。
+
+**2. 路由级懒加载。** 文档页是唯一依赖 react-markdown / highlight.js 的页面，`App.tsx` 里用
+`lazy()` 拆出去，`MainLayout` 的 `<Outlet />` 外面套 `Suspense`（NavBar 常驻，只换内容区）。
+
+**3. 背景层懒加载。** `SiteBackground.tsx` 里 `Plasma` 与 `LetterGlitch` 各自 `lazy()`。
+因为挂载点是布局层，这两个 chunk 全站只请求一次，之后切页复用。
+
+`vite.config.ts` 的 `codeSplitting.groups` 配合拆包，其中 `ogl` 单独成 `plasma` 组——
+混进 `anim` 会被首页首屏一起 preload。
+
+实测首屏 gzip：**约 151 KB**（react 53.7 + anim 84.2 + 入口 13.2）；
+markdown 116.6 KB、ogl 12.9 KB 与背景层 4.3 KB 都改为按需下载：
+
+| 页面 | 加载的 chunk |
+| --- | --- |
+| `/` | index + react + anim + Plasma + LetterGlitch + plasma(ogl) |
+| `/#/code/xxx` | + SectionPage + markdown |
+
+> 新增依赖后建议跑一次 `pnpm build` 看产物表，确认没有东西意外落回首屏。
+
 ## 部署
+
+流水线在 `.github/workflows/deploy.yml`，**只在打 tag 时触发**（`v*`），推 `main` 不会部署：
+
+```bash
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+流程：**build → GitHub Pages（OIDC artifact）→ 可选自托管 rsync**。
+走的是官方 `actions/deploy-pages`，不往 `gh-pages` 分支强推。
+也可在 Actions 页面用 `workflow_dispatch` 手动触发一次。
+
+流水线开箱即用，**下面这些配置全部留空也不会报错**——配了才启用对应步骤。
+到仓库 Settings → Secrets and variables → Actions 里加同名条目即可。
 
 ### 根路径（自托管、Vercel、Netlify）
 
-直接 `npm run build`，把 `dist/` 丢上去。
+直接 `pnpm build`，把 `dist/` 丢上去。
 
 ### GitHub Pages 子路径
 
-仓库 Settings → Pages → Source 选 **GitHub Actions**，然后：
+仓库 Settings → Pages → Source 选 **GitHub Actions** 即可，流水线已自动处理 `base` 和 `.nojekyll`。
+本地想手动构建同样效果的包：
 
 ```bash
-VITE_BASE=/你的仓库名/ npm run build
+VITE_BASE=/你的仓库名/ pnpm build
 ```
 
-仓库里已经带了 `.github/workflows/deploy.yml`，推到 `main` 分支会自动构建部署，其中已经处理了 `base` 和 `.nojekyll`。
+### 预留的可选配置
+
+变量（variables，非敏感）：
+
+| 名称 | 作用 |
+| --- | --- |
+| `CUSTOM_DOMAIN` | 自定义域名，配了会在产物里写 `CNAME` |
+| `SITE_URL` | 站点完整地址，构建期注入 `VITE_SITE_URL`，给 SEO / OG 用 |
+| `DEPLOY_PORT` | 自托管 SSH 端口，默认 22 |
+
+密钥（secrets，敏感）：
+
+| 名称 | 作用 |
+| --- | --- |
+| `DEPLOY_HOST` | 自托管服务器地址 |
+| `DEPLOY_USER` | SSH 用户名，默认 root |
+| `DEPLOY_SSH_KEY` | SSH 私钥全文（PEM） |
+| `DEPLOY_TARGET` | 服务器站点根目录，如 `/var/www/blog-page` |
+
+自托管同步只在 `DEPLOY_SSH_KEY`、`DEPLOY_HOST`、`DEPLOY_TARGET` **三个都配齐**时才执行，用 rsync `--delete` 覆盖目标目录，请先确认路径写对。
 
 ### nginx 自托管
 

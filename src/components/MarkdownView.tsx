@@ -12,7 +12,8 @@ import sql from 'highlight.js/lib/languages/sql'
 import typescript from 'highlight.js/lib/languages/typescript'
 import xml from 'highlight.js/lib/languages/xml'
 import yaml from 'highlight.js/lib/languages/yaml'
-import 'highlight.js/styles/github.css'
+// 全站深色主题，代码高亮也要跟着换成深色，否则亮色代码块会非常刺眼
+import 'highlight.js/styles/github-dark.css'
 
 // 只注册会用到的语言，避免把 highlight.js 全量语言打进包里
 const languages = {
@@ -32,6 +33,10 @@ type Props = {
   content: string
 }
 
+function isExternal(href: string | undefined): boolean {
+  return typeof href === 'string' && /^(https?:)?\/\//.test(href)
+}
+
 export default function MarkdownView({ content }: Props) {
   return (
     <article className="markdown-body">
@@ -39,11 +44,16 @@ export default function MarkdownView({ content }: Props) {
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeSlug, [rehypeHighlight, { languages, detect: true }]]}
         components={{
-          a: ({ children, ...props }) => (
-            <a {...props} target="_blank" rel="noreferrer">
-              {children}
-            </a>
-          ),
+          a: ({ node: _node, href, children, ...props }) =>
+            isExternal(href) ? (
+              <a href={href} {...props} target="_blank" rel="noreferrer noopener">
+                {children}
+              </a>
+            ) : (
+              <a href={href} {...props}>
+                {children}
+              </a>
+            ),
         }}
       >
         {content}

@@ -5,3 +5,7 @@ dist-ssr
 .DS_Store
 .vite
 npm-debug.log*
+.workbuddy
+*.log
+.idea
+.vscode

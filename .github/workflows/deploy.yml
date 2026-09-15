@@ -1,8 +1,9 @@
-name: Deploy to GitHub Pages
+name: Deploy
 
+# 只在打 tag 时发布，日常往 main 推不会触发部署
 on:
   push:
-    branches: [main]
+    tags: ['v*']
   workflow_dispatch:
 
 permissions:
@@ -14,26 +15,67 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+# ---------------------------------------------------------------------------
+# 预留配置：全部留空即可，未配置时相关步骤自动跳过，不会让流水线变红。
+# 需要时到仓库 Settings → Secrets and variables → Actions 里加同名条目。
+#
+#  变量（variables，非敏感）
+#   CUSTOM_DOMAIN     自定义域名，配了会在产物里写 CNAME，例如 hub.example.com
+#   SITE_URL          站点完整地址，构建期注入给 SEO / OG 用
+#   DEPLOY_PORT       自托管 SSH 端口，默认 22
+#
+#  密钥（secrets，敏感）
+#   DEPLOY_HOST       自托管服务器地址
+#   DEPLOY_USER       SSH 用户名
+#   DEPLOY_SSH_KEY    SSH 私钥（PEM 全文）
+#   DEPLOY_TARGET     服务器上的站点根目录，例如 /var/www/blog-page
+# ---------------------------------------------------------------------------
+env:
+  CUSTOM_DOMAIN: ${{ vars.CUSTOM_DOMAIN }}
+  SITE_URL: ${{ vars.SITE_URL }}
+  DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # 版本读 package.json 的 packageManager，本地与 CI 保持一致
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
-          # Vite 8 要求 Node ^20.19.0 || >=22.12.0
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_SITE_URL: ${{ env.SITE_URL }}
+
+      - name: 写 CNAME（配了 CUSTOM_DOMAIN 才执行）
+        if: env.CUSTOM_DOMAIN != ''
+        run: echo "${{ env.CUSTOM_DOMAIN }}" > dist/CNAME
+
       - run: touch dist/.nojekyll
+
+      # 给 GitHub Pages 用
       - uses: actions/upload-pages-artifact@v3
         with:
           path: ./dist
 
-  deploy:
+      # 给自托管 rsync 用
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: ./dist
+          retention-days: 3
+
+  # 官方 Pages 部署：走 OIDC artifact，不往 gh-pages 分支强推
+  pages:
     needs: build
     runs-on: ubuntu-latest
     environment:
@@ -42,3 +84,25 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # 自托管同步：配齐 DEPLOY_* 三个密钥后才启用
+  selfhost:
+    needs: build
+    if: ${{ secrets.DEPLOY_SSH_KEY != '' && secrets.DEPLOY_HOST != '' && secrets.DEPLOY_TARGET != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: dist
+
+      - name: 同步到服务器
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ env.DEPLOY_PORT }}" -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ env.DEPLOY_PORT }} -o StrictHostKeyChecking=no" \
+            dist/ "${{ secrets.DEPLOY_USER || 'root' }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_TARGET }}/"
+          rm -f ~/.ssh/deploy_key

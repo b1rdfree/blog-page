@@ -1,4 +1,5 @@
 import { useParams } from 'react-router-dom'
+import AnimatedContent from '../components/bits/AnimatedContent'
 import { getNavItem, isSectionKey } from '../config/nav'
 import { getDoc, getSectionDocs } from '../lib/docs'
 import DocList from '../components/DocList'
@@ -14,6 +15,9 @@ export default function SectionPage() {
   const docs = getSectionDocs(section)
   const active = slug ? getDoc(section, slug) : docs[0]
 
+  // 指定了文档却找不到，说明地址是错的，走 404 而不是「还没有内容」
+  if (slug && !active) return <NotFound />
+
   return (
     <div className="section-page">
       <aside className="section-aside">
@@ -26,7 +30,9 @@ export default function SectionPage() {
 
       <section className="section-content">
         {active ? (
-          <MarkdownView content={active.content} />
+          <AnimatedContent distance={22} duration={0.55} className="section-content-inner">
+            <MarkdownView content={active.content} />
+          </AnimatedContent>
         ) : (
           <div className="empty-state">
             <h2>还没有内容</h2>

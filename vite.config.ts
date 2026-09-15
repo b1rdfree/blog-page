@@ -27,6 +27,18 @@ export default defineConfig({
               priority: 20,
             },
             {
+              name: 'anim',
+              test: /[\\/]node_modules[\\/](motion|framer-motion|gsap|@gsap)[\\/]/,
+              priority: 15,
+            },
+            {
+              // ogl 单独成组：它只被异步加载的 Plasma 背景引用，
+              // 混进 anim 会被首页首屏一起 preload。
+              name: 'plasma',
+              test: /[\\/]node_modules[\\/]ogl[\\/]/,
+              priority: 16,
+            },
+            {
               name: 'markdown',
               test: /[\\/]node_modules[\\/](react-markdown|remark-gfm|rehype-highlight|rehype-slug|highlight\.js)[\\/]/,
               priority: 10,
