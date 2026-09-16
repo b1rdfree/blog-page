@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { useParams } from 'react-router-dom'
 import AnimatedContent from '../components/bits/AnimatedContent'
 import { getNavItem, isSectionKey } from '../config/nav'
@@ -6,12 +7,24 @@ import DocList from '../components/DocList'
 import MarkdownView from '../components/MarkdownView'
 import NotFound from './NotFound'
 
+// 旅游栏目用「数据集 + 行程模板」渲染，只在真的进旅游页时才下载这块代码
+const TravelSection = lazy(() => import('./TravelSection'))
+
 export default function SectionPage() {
   const { section = '', slug } = useParams()
 
   if (!isSectionKey(section)) return <NotFound />
 
   const navItem = getNavItem(section)
+
+  if (navItem?.renderer === 'travel') {
+    return (
+      <Suspense fallback={<div className="route-loading">加载中…</div>}>
+        <TravelSection section={section} slug={slug} />
+      </Suspense>
+    )
+  }
+
   const docs = getSectionDocs(section)
   const active = slug ? getDoc(section, slug) : docs[0]
 

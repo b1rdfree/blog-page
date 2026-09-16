@@ -1,0 +1,746 @@
+/**
+ * 旅行模板样式。
+ *
+ * 结构 / 交互仿照参考页（编号章节 + sticky 锚点导航 + 结论卡 + 高亮表格 +
+ * 逐日时间轴），配色改为适配本站深色玻璃拟态：青=推荐、琥珀=注意、朱红=劝退、
+ * 紫=关键。语义色沿用参考页的四色分工，只是提亮到深色底上可读。
+ *
+ * 本文件只被异步加载的 TravelSection 引入，因此不会进首屏样式。
+ */
+
+.trip-page {
+  --trip-teal: #4fd1c5;
+  --trip-amber: #e8a33d;
+  --trip-red: #f2777a;
+  --trip-violet: #b49bff;
+  --trip-surface: rgba(255, 255, 255, 0.035);
+  --trip-surface-hi: rgba(255, 255, 255, 0.06);
+
+  color: var(--ink);
+  line-height: 1.75;
+}
+
+/* 章节锚点跳转时给 sticky navbar(60) + 章节导航(约 50) 让位 */
+.trip-sec {
+  scroll-margin-top: 118px;
+}
+
+/* ---------- 页头 ---------- */
+
+.trip-hd {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.trip-title {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+  line-height: 1.35;
+}
+
+.trip-sub {
+  margin: 10px 0 0;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.trip-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.trip-chip {
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--trip-surface);
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
+
+.trip-updated {
+  margin: 14px 0 0;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+}
+
+/* ---------- sticky 章节导航 ---------- */
+
+.trip-nav {
+  position: sticky;
+  top: 60px;
+  z-index: 5;
+  margin: 0 -36px;
+  padding: 0 36px;
+  background: rgba(11, 8, 18, 0.94);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid var(--line);
+}
+
+.trip-nav-inner {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 9px 0;
+  scrollbar-width: none;
+}
+
+.trip-nav-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.trip-nav-inner a {
+  flex: 0 0 auto;
+  padding: 5px 12px;
+  border-radius: 999px;
+  color: var(--ink-faint);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+
+.trip-nav-inner a:hover {
+  background: var(--trip-surface-hi);
+  color: var(--ink);
+}
+
+.trip-nav-inner a.is-active {
+  background: rgba(180, 155, 255, 0.18);
+  color: #ddd1ff;
+}
+
+/* ---------- 章节 ---------- */
+
+.trip-body {
+  padding-top: 8px;
+}
+
+.trip-sec {
+  padding-top: 30px;
+}
+
+.trip-sec-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 19px;
+  font-weight: 620;
+}
+
+.trip-sec-num {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 6px;
+  background: rgba(180, 155, 255, 0.16);
+  color: var(--trip-violet);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.trip-sec-lead {
+  margin: -6px 0 16px;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+}
+
+.trip-footnote {
+  margin: 10px 0 0;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+}
+
+.trip-inline-link {
+  color: var(--trip-violet);
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(180, 155, 255, 0.5);
+}
+
+/* ---------- 网格 / 卡片 ---------- */
+
+.trip-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.trip-grid.g2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.trip-grid.g3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.trip-card {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--trip-surface);
+}
+
+.trip-card-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.trip-card-hd h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.trip-card-tag {
+  flex: 0 0 auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(79, 209, 197, 0.14);
+  color: var(--trip-teal);
+  font-size: 11.5px;
+}
+
+.trip-card p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+/* ---------- 结论卡 ---------- */
+
+.trip-concl {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 12px;
+  background: var(--trip-surface);
+}
+
+.trip-concl.c-key {
+  border-left-color: var(--trip-violet);
+}
+.trip-concl.c-good {
+  border-left-color: var(--trip-teal);
+}
+.trip-concl.c-warn {
+  border-left-color: var(--trip-amber);
+}
+.trip-concl.c-bad {
+  border-left-color: var(--trip-red);
+}
+
+.trip-concl-t {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.trip-concl-badge {
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.c-key .trip-concl-badge {
+  background: rgba(180, 155, 255, 0.16);
+  color: var(--trip-violet);
+}
+.c-good .trip-concl-badge {
+  background: rgba(79, 209, 197, 0.14);
+  color: var(--trip-teal);
+}
+.c-warn .trip-concl-badge {
+  background: rgba(232, 163, 61, 0.16);
+  color: var(--trip-amber);
+}
+.c-bad .trip-concl-badge {
+  background: rgba(242, 119, 122, 0.16);
+  color: var(--trip-red);
+}
+
+.trip-concl-d {
+  margin-top: 6px;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+/* ---------- 表格 ---------- */
+
+.trip-tblwrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--trip-surface);
+}
+
+.trip-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.trip-tbl th,
+.trip-tbl td {
+  padding: 9px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+
+.trip-tbl th {
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.trip-tbl tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.trip-tbl td {
+  color: var(--ink-soft);
+  vertical-align: top;
+}
+
+.trip-tbl tr.hl td {
+  background: rgba(180, 155, 255, 0.09);
+  color: var(--ink);
+}
+
+/* ---------- 逐日时间轴 ---------- */
+
+.trip-days {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.trip-day {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--trip-surface);
+  overflow: hidden;
+}
+
+.trip-day-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--line);
+}
+
+.trip-day-dt {
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--trip-violet);
+}
+
+.trip-day-tag {
+  margin-left: 10px;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+}
+
+.trip-day-cost {
+  flex: 0 0 auto;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-day-bd {
+  padding: 4px 16px 10px;
+}
+
+.trip-row {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 2px 12px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.trip-row:last-child {
+  border-bottom: none;
+}
+
+.trip-tm {
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  padding-top: 2px;
+}
+
+.trip-tt {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.trip-dd {
+  grid-column: 2;
+  margin-top: 2px;
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.trip-pill {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.trip-pill.p-yes {
+  background: rgba(79, 209, 197, 0.15);
+  color: var(--trip-teal);
+}
+.trip-pill.p-no {
+  background: rgba(242, 119, 122, 0.15);
+  color: var(--trip-red);
+}
+.trip-pill.p-mid {
+  background: rgba(232, 163, 61, 0.16);
+  color: var(--trip-amber);
+}
+
+/* ---------- 提示框 ---------- */
+
+.trip-callout {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--trip-surface);
+}
+
+.trip-callout.is-tip {
+  border-left: 3px solid var(--trip-teal);
+}
+.trip-callout.is-danger {
+  border-left: 3px solid var(--trip-red);
+}
+.trip-callout.is-note {
+  border-left: 3px solid var(--trip-violet);
+}
+
+.trip-callout-label {
+  margin-bottom: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.is-tip .trip-callout-label {
+  color: var(--trip-teal);
+}
+.is-danger .trip-callout-label {
+  color: var(--trip-red);
+}
+.is-note .trip-callout-label {
+  color: var(--trip-violet);
+}
+
+.trip-callout ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+  line-height: 1.85;
+}
+
+/* ---------- 数字速览 ---------- */
+
+.trip-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.trip-stat {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--trip-surface);
+  text-align: center;
+}
+
+.trip-stat-v {
+  display: block;
+  font-size: 20px;
+  font-weight: 650;
+  color: var(--trip-violet);
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-stat-l {
+  display: block;
+  margin-top: 2px;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+}
+
+.trip-prose p {
+  margin: 0 0 10px;
+  color: var(--ink-soft);
+  font-size: 14.5px;
+}
+
+.trip-prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- 清单 ---------- */
+
+.trip-checklist-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-checklist-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.trip-checklist-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--trip-teal);
+  transition: width 0.2s ease;
+}
+
+.trip-check-group + .trip-check-group {
+  margin-top: 16px;
+}
+
+.trip-check-group-title {
+  margin: 0 0 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.trip-check-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.trip-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.trip-check:hover {
+  background: var(--trip-surface-hi);
+}
+
+.trip-check input {
+  margin-top: 4px;
+  accent-color: var(--trip-teal);
+  flex: 0 0 auto;
+}
+
+.trip-check.is-done {
+  color: var(--ink-faint);
+  text-decoration: line-through;
+}
+
+/* ---------- 左侧列表：搜索与筛选 ---------- */
+
+.trip-list {
+  display: flex;
+  flex-direction: column;
+  /* 撑满 .section-aside 剩余高度，让内部列表自己滚动 */
+  flex: 1;
+  min-height: 0;
+}
+
+/* 搜索框与筛选项固定在顶部，只有结果列表滚 */
+.trip-list .doc-list {
+  flex: 1;
+  min-height: 0;
+}
+
+.trip-search {
+  position: relative;
+  padding: 0 11px 10px;
+}
+
+.trip-search-input {
+  width: 100%;
+  padding: 8px 30px 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.trip-search-input::placeholder {
+  color: var(--ink-faint);
+}
+
+.trip-search-input:focus {
+  border-color: rgba(180, 155, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.trip-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.trip-search-clear {
+  position: absolute;
+  top: 5px;
+  right: 17px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.trip-search-clear:hover {
+  background: var(--trip-surface-hi);
+  color: var(--ink);
+}
+
+.trip-facets {
+  padding: 0 11px 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.trip-facet-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.trip-facet-label {
+  margin-right: 2px;
+  color: var(--ink-faint);
+  font-size: 11.5px;
+}
+
+.trip-facet {
+  padding: 2px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 11.5px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.trip-facet:hover {
+  background: var(--trip-surface-hi);
+}
+
+.trip-facet.is-active {
+  background: rgba(180, 155, 255, 0.2);
+  border-color: rgba(180, 155, 255, 0.45);
+  color: #ddd1ff;
+}
+
+.trip-count {
+  padding: 0 11px 8px;
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 11.5px;
+}
+
+.trip-empty {
+  padding: 0 11px 12px;
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 13px;
+}
+
+.trip-item-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.trip-item-chip {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--trip-surface-hi);
+  color: var(--ink-faint);
+  font-size: 11px;
+}
+
+/* ---------- 右侧内容加载态 ---------- */
+
+.trip-loading {
+  padding: 64px 24px;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* ---------- 响应式 ---------- */
+
+@media (max-width: 900px) {
+  .trip-nav {
+    margin: 0 -18px;
+    padding: 0 18px;
+  }
+
+  .trip-grid.g2,
+  .trip-grid.g3 {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-row {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+}

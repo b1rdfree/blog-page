@@ -1,6 +1,7 @@
 # Nonight Hub
 
-Vite + React + TypeScript 搭的个人内容工作台。顶部菜单进栏目，左边挑文档，右边渲染 Markdown。
+Vite + React + TypeScript 搭的个人内容工作台。顶部菜单进栏目，左边挑内容，右边渲染——
+文档栏目渲染 Markdown，旅游栏目渲染结构化的行程数据集。
 
 ## 快速开始
 
@@ -22,18 +23,23 @@ pnpm lint                # ESLint 检查
 src/
 ├── config/nav.ts        # 菜单配置（唯一扩展点）
 ├── lib/docs.ts          # 扫描 content 下的 md，解析 frontmatter
+├── lib/travel/          # 旅游栏目：meta.ts 轻量索引 / dataset.ts 按需加载
 ├── layouts/MainLayout   # 顶部导航 + 内容区 + 页脚
 ├── components/
 │   ├── NavBar           # 顶部菜单
 │   ├── DocList          # 左侧文档列表
-│   └── MarkdownView     # 右侧 Markdown 渲染
+│   ├── MarkdownView     # 右侧 Markdown 渲染
+│   └── travel/          # 旅游专用：TripList 搜索列表 + TripTemplate 行程模板
 ├── pages/
 │   ├── Home             # 首页：栏目卡片 + 最近更新
-│   ├── SectionPage      # 栏目页：左列表 + 右正文
+│   ├── SectionPage      # 文档栏目页：左列表 + 右正文
+│   ├── TravelSection    # 旅游栏目页：左搜索列表 + 右数据集模板
 │   └── NotFound
-└── content/             # 所有文档，按栏目分目录
-    ├── code/
-    └── travel/
+└── content/             # 所有内容，按栏目分目录
+    ├── code/            # .md 文档
+    └── travel/          # .json 行程数据集
+build/
+└── travelIndexPlugin.ts # 构建期扫描 travel/*.json，生成 virtual:travel-index
 ```
 
 ## 加一篇文档
@@ -54,6 +60,65 @@ summary: 一句话摘要      # 不写则自动截取正文首段
 # 正文标题
 ```
 
+## 加一篇旅行行程（数据集）
+
+旅游栏目不走 Markdown，走 **一份行程 = 一个 `.json` 数据集**：左侧列表可搜索，
+点进去由 `TripTemplate` 把数据灌进统一的行程模板（编号章节 + sticky 锚点导航 +
+结论卡 + 高亮表格 + 逐日时间轴 + 可勾清单）。
+
+**加一篇 = 往 `src/content/travel/` 丢一个 `.json`**，文件名（去掉 `.json`）就是 URL 上的 slug。
+不用注册、不用改组件，列表和首页「最近更新」自动出现。
+
+```jsonc
+{
+  "version": 1,
+  "meta": {
+    "title": "桂林 + 阳朔 3 日休闲线",
+    "summary": "不赶路的走法，适合带家人或第一次去。",   // 列表和页头都显示
+    "chips": ["3 天", "休闲", "人均 ¥1100 起"],          // 页头小胶囊
+    "tags": ["桂林", "阳朔", "休闲"],                    // 参与搜索
+    "order": 2,                                          // 越小越靠前
+    "updated": "2026-09-10",
+    "filters": {                                         // 左侧筛选 + 参与搜索，随便加字段
+      "days": 3, "pace": "休闲", "budget": "经济",
+      "themes": ["自然山水"], "from": "成都", "to": ["桂林", "阳朔"]
+    }
+  },
+  "sections": [
+    { "type": "conclusions", "title": "先看这 3 条结论", "items": [
+        { "tone": "key",  "title": "…", "desc": "…" },   // key 关键 / good 推荐 / warn 注意 / bad 劝退
+        { "tone": "warn", "title": "…", "desc": "…", "link": { "text": "见第 03 节", "anchor": "#s2" } }
+    ]},
+    { "type": "table", "title": "预算参考", "columns": ["项目", "经济", "舒适"],
+      "rows": [{ "cells": ["交通", "300", "700"] },
+               { "cells": ["合计", "约 1100", "约 2300"], "highlight": true }],
+      "footnote": "不含往返大交通" },
+    { "type": "days", "title": "逐日行程", "days": [
+        { "label": "Day 1", "tag": "抵达 · 市区", "cost": "人均 ¥260", "items": [
+            { "time": "上午", "title": "…", "desc": "…",
+              "pill": { "text": "推荐", "tone": "yes" } }   // yes 推荐 / no 不推荐 / mid 看情况
+    ]}]},
+    { "type": "checklist", "title": "出门前照着勾一遍",
+      "groups": [{ "title": "证件与钱", "items": ["身份证", "…"] }] },
+    { "type": "callout", "title": "避坑", "tone": "danger", "items": ["…"] },  // tip 建议 / danger 避坑 / note 补充
+    { "type": "cards", "title": "从成都出发", "columns": 3,
+      "items": [{ "title": "飞机", "desc": "…", "tag": "最快" }] },
+    { "type": "stats", "title": "速览", "items": [{ "value": "6天5晚", "label": "行程长度" }] },
+    { "type": "prose", "title": "写在最后", "paragraphs": ["…"] }
+  ]
+}
+```
+
+字段的完整定义与注释见 `src/lib/travel/types.ts`。几个约定：
+
+- `sections` 里每个 `type` 对应模板里的一个模块，加新模块 = `types.ts` 加一支联合类型 +
+  `TripTemplate.tsx` 的 `SectionBody` 加一个 `case`。
+- 顶部导航的短名默认取 `title`，太长了用 `navLabel` 覆盖；锚点按数组下标生成 `#s0` `#s1`…，
+  所以结论卡里的 `link.anchor` 填 `#s2` 就跳到第 3 个小节。
+- **meta 里别写正文**：它会被构建期抽成索引常驻首屏，正文只在点开时才下载。
+
+> 别在这个目录放 `.md` 文件——`lib/docs.ts` 会把它当成一篇文档扫进「最近更新」。
+
 ## 加一个栏目
 
 两步，不用碰组件代码：
@@ -67,6 +132,9 @@ summary: 一句话摘要      # 不写则自动截取正文首段
 2. 建目录 `src/content/smart-home/`，往里放 `.md`
 
 路由、左侧列表、首页卡片会自动出现。
+
+如果这个栏目也要走「数据集 + 模板」而不是 Markdown，在那一加个
+`renderer: 'travel'`（并准备对应的模板组件），`SectionPage` 会按它分流。
 
 ## 全站统一深色背景
 
@@ -148,6 +216,17 @@ markdown 116.6 KB、ogl 12.9 KB 与背景层 4.3 KB 都改为按需下载：
 | --- | --- |
 | `/` | index + react + anim + Plasma + LetterGlitch + plasma(ogl) |
 | `/#/code/xxx` | + SectionPage + markdown |
+| `/#/travel/xxx` | + SectionPage + TravelSection + **该篇**数据集（1~3 KB） |
+
+**旅游栏目的三层拆分**（行程从 3 篇涨到 300 篇，首屏也不受影响）：
+
+1. **索引**：`build/travelIndexPlugin.ts` 在构建期扫描 `src/content/travel/*.json`，
+   只抽 `meta` 生成虚拟模块 `virtual:travel-index`。左侧列表靠它搜索，
+   体积恒定在几百字节，不随行程数增长。
+2. **模板**：`TravelSection`（组件 + 9 KB CSS，gzip 2.2）由 `SectionPage` 按需 `lazy()`，
+   不进旅游页就不下载。
+3. **数据集**：`dataset.ts` 用**非 eager** 的 `import.meta.glob`，每份 `.json` 单独成 chunk，
+   只有点开那一篇才下载；鼠标 hover 列表项时 `prefetchTrip()` 会提前取，点开基本零等待。
 
 > 新增依赖后建议跑一次 `pnpm build` 看产物表，确认没有东西意外落回首屏。
 
