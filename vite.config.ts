@@ -1,9 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
+import { travelIndexPlugin } from './build/travelIndexPlugin.ts'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // 扫描旅行数据集，构建期生成轻量索引（详见 build/travelIndexPlugin.ts）
+    travelIndexPlugin(fileURLToPath(new URL('./src/content/travel', import.meta.url))),
+  ],
   base: process.env.VITE_BASE ?? '/',
   resolve: {
     alias: {

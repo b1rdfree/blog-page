@@ -15,6 +15,12 @@ export type NavItem = {
   desc: string
   /** 可选：菜单右上角小标记 */
   badge?: string
+  /**
+   * 栏目用哪套渲染器：
+   * - 缺省 / 'docs'：src/content/<key>/*.md，走 Markdown 文档阅读器
+   * - 'travel'：src/content/<key>/*.json 数据集，走可搜索列表 + 行程模板
+   */
+  renderer?: 'docs' | 'travel'
 }
 
 export const HOME_KEY = 'home'
@@ -34,6 +40,7 @@ export const navItems: NavItem[] = [
     key: 'travel',
     label: '旅游',
     desc: '行程方案、路线与实用信息',
+    renderer: 'travel',
   },
   // 以后新增栏目，照着上面加就行，例如：
   // { key: 'smart-home', label: '智能家居', desc: 'Home Assistant 与设备接入' },

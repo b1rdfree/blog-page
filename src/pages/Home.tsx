@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { getNavItem, sectionItems } from '../config/nav'
 import { allDocs, countDocs, getRecentDocs } from '../lib/docs'
+import { getRecentTrips, travelMeta } from '../lib/travel/meta'
 import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion'
 import AnimatedContent from '../components/bits/AnimatedContent'
 import BorderGlow from '../components/bits/BorderGlow'
@@ -11,9 +13,34 @@ import DecryptedText from '../components/bits/DecryptedText'
 // 解码动画用的字符集（只用 ASCII，中文不参与乱码替换）
 const DECRYPT_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*<>/\\|=_+'
 
+/** 旅游栏目走数据集而非 markdown，篇数要分开统计 */
+function countOf(key: string): number {
+  return getNavItem(key)?.renderer === 'travel' ? travelMeta.length : countDocs(key)
+}
+
 export default function Home() {
-  const recent = getRecentDocs(6)
-  const tagCount = new Set(allDocs.flatMap((doc) => doc.tags)).size
+  // 文档与旅行数据集混在一起按日期倒序
+  const recent = useMemo(
+    () =>
+      [
+        ...getRecentDocs(6).map((doc) => ({
+          section: doc.section,
+          slug: doc.slug,
+          title: doc.title,
+          date: doc.date,
+        })),
+        ...getRecentTrips(),
+      ]
+        .sort((a, b) => (a.date < b.date ? 1 : -1))
+        .slice(0, 6),
+    [],
+  )
+
+  const totalCount = allDocs.length + travelMeta.length
+  const tagCount = new Set([
+    ...allDocs.flatMap((doc) => doc.tags),
+    ...travelMeta.flatMap((trip) => trip.tags),
+  ]).size
   // DecryptedText 内部没有处理该偏好，开了「减少动态效果」就直接渲染纯文本
   const reduceMotion = usePrefersReducedMotion()
 
@@ -52,7 +79,7 @@ export default function Home() {
 
               <div className="home-stats">
                 <div className="stat">
-                  <CountUp to={allDocs.length} duration={1.4} className="stat-num" />
+                  <CountUp to={totalCount} duration={1.4} className="stat-num" />
                   <span className="stat-label">篇文档</span>
                 </div>
                 <div className="stat-divider" aria-hidden="true" />
@@ -92,7 +119,7 @@ export default function Home() {
                   <Link to={`/${item.key}`} className="section-card-link">
                     <div className="section-card-head">
                       <h3 className="section-card-title">{item.label}</h3>
-                      <span className="section-card-count">{countDocs(item.key)} 篇</span>
+                      <span className="section-card-count">{countOf(item.key)} 篇</span>
                     </div>
                     <p className="section-card-desc">{item.desc}</p>
                     <span className="section-card-more">进入 →</span>
