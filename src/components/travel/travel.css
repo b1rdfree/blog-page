@@ -20,11 +20,6 @@
   line-height: 1.75;
 }
 
-/* 章节锚点跳转时给 sticky navbar(60) + 章节导航(约 50) 让位 */
-.trip-sec {
-  scroll-margin-top: 118px;
-}
-
 /* ---------- 页头 ---------- */
 
 .trip-hd {
@@ -94,24 +89,33 @@
   display: none;
 }
 
-.trip-nav-inner a {
+.trip-nav-inner button {
   flex: 0 0 auto;
   padding: 5px 12px;
+  border: none;
   border-radius: 999px;
+  background: transparent;
   color: var(--ink-faint);
   font-size: 13px;
+  font-family: inherit;
   white-space: nowrap;
+  cursor: pointer;
   transition: background 0.15s, color 0.15s;
 }
 
-.trip-nav-inner a:hover {
+.trip-nav-inner button:hover {
   background: var(--trip-surface-hi);
   color: var(--ink);
 }
 
-.trip-nav-inner a.is-active {
+.trip-nav-inner button.is-active {
   background: rgba(180, 155, 255, 0.18);
   color: #ddd1ff;
+}
+
+.trip-nav-inner button:focus-visible {
+  outline: 2px solid rgba(180, 155, 255, 0.6);
+  outline-offset: -2px;
 }
 
 /* ---------- 章节 ---------- */
@@ -156,10 +160,20 @@
   font-size: 12.5px;
 }
 
-.trip-inline-link {
-  color: var(--trip-violet);
-  text-decoration: none;
+/* 结论卡里的「见第 03 节」：是按钮不是链接，HashRouter 下不能用锚点 href */
+button.trip-inline-link {
+  padding: 0;
+  border: none;
   border-bottom: 1px dashed rgba(180, 155, 255, 0.5);
+  background: transparent;
+  color: var(--trip-violet);
+  font-size: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+button.trip-inline-link:hover {
+  border-bottom-style: solid;
 }
 
 /* ---------- 网格 / 卡片 ---------- */

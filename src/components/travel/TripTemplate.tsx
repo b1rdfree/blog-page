@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { usePrefersReducedMotion } from '../../lib/usePrefersReducedMotion'
 import type {
   CalloutTone,
   ConclusionTone,
@@ -12,6 +13,15 @@ type Props = {
   /** 切换行程时用来重置勾选状态等局部 state */
   resetKey: string
 }
+
+/** 顶部 navbar 高度，和 global.css 里 .navbar-inner 的 height 一致 */
+const NAVBAR_HEIGHT = 60
+
+/**
+ * 站点用的是 HashRouter，URL 上的 `#` 已经被路由占用，
+ * 所以章节跳转**不能用 `<a href="#s1">`** —— 那会把 hash 改成 `#s1`，
+ * 被路由解析成路径 `s1`，直接落到 404。这里统一走程序化滚动。
+ */
 
 /** 章节锚点：s0 / s1 / s2 …，与数据集顺序绑定 */
 function sectionId(index: number): string {
@@ -98,30 +108,46 @@ function Checklist({ groups, resetKey }: { groups: { title: string; items: strin
   )
 }
 
-function SectionBody({ section, resetKey }: { section: TripSection; resetKey: string }) {
+function SectionBody({
+  section,
+  resetKey,
+  onNavigate,
+}: {
+  section: TripSection
+  resetKey: string
+  /** 章节内跳转（结论卡里的 link），同样不能用锚点 href */
+  onNavigate: (anchor: string) => void
+}) {
   switch (section.type) {
     case 'conclusions':
       return (
         <div className="trip-grid g2">
-          {section.items.map((item) => (
-            <div key={item.title} className={`trip-concl c-${item.tone}`}>
-              <div className="trip-concl-t">
-                <span className="trip-concl-badge">{TONE_TEXT[item.tone]}</span>
-                {item.title}
+          {section.items.map((item) => {
+            const link = item.link
+            return (
+              <div key={item.title} className={`trip-concl c-${item.tone}`}>
+                <div className="trip-concl-t">
+                  <span className="trip-concl-badge">{TONE_TEXT[item.tone]}</span>
+                  {item.title}
+                </div>
+                <div className="trip-concl-d">
+                  {item.desc}
+                  {link ? (
+                    <>
+                      {' '}
+                      <button
+                        type="button"
+                        className="trip-inline-link"
+                        onClick={() => onNavigate(link.anchor.replace(/^#/, ''))}
+                      >
+                        {link.text}
+                      </button>
+                    </>
+                  ) : null}
+                </div>
               </div>
-              <div className="trip-concl-d">
-                {item.desc}
-                {item.link ? (
-                  <>
-                    {' '}
-                    <a className="trip-inline-link" href={item.link.anchor}>
-                      {item.link.text}
-                    </a>
-                  </>
-                ) : null}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )
 
@@ -240,6 +266,24 @@ export default function TripTemplate({ dataset, resetKey }: Props) {
   const { meta, sections } = dataset
   const [activeId, setActiveId] = useState<string>('')
   const bodyRef = useRef<HTMLDivElement>(null)
+  const navRef = useRef<HTMLElement>(null)
+  const reduceMotion = usePrefersReducedMotion()
+
+  /** 滚到指定章节：手动减掉 sticky 的 navbar 与章节导航高度，否则标题会被压住 */
+  const scrollToSection = useCallback(
+    (id: string) => {
+      setActiveId(id)
+      const target = document.getElementById(id)
+      if (!target) return
+
+      const navHeight = navRef.current?.offsetHeight ?? 44
+      const offset = NAVBAR_HEIGHT + navHeight + 12
+      const top = target.getBoundingClientRect().top + window.scrollY - offset
+
+      window.scrollTo({ top: Math.max(top, 0), behavior: reduceMotion ? 'auto' : 'smooth' })
+    },
+    [reduceMotion],
+  )
 
   const navItems = useMemo(
     () => sections.map((section, index) => ({ id: sectionId(index), label: navLabelOf(section) })),
@@ -291,16 +335,18 @@ export default function TripTemplate({ dataset, resetKey }: Props) {
       </header>
 
       {navItems.length > 1 ? (
-        <nav className="trip-nav" aria-label="章节导航">
+        <nav ref={navRef} className="trip-nav" aria-label="章节导航">
           <div className="trip-nav-inner">
             {navItems.map((item) => (
-              <a
+              <button
                 key={item.id}
-                href={`#${item.id}`}
+                type="button"
+                onClick={() => scrollToSection(item.id)}
                 className={activeId === item.id ? 'is-active' : undefined}
+                aria-current={activeId === item.id ? 'true' : undefined}
               >
                 {item.label}
-              </a>
+              </button>
             ))}
           </div>
         </nav>
@@ -316,7 +362,7 @@ export default function TripTemplate({ dataset, resetKey }: Props) {
                 {section.title}
               </h2>
               {section.lead ? <p className="trip-sec-lead">{section.lead}</p> : null}
-              <SectionBody section={section} resetKey={resetKey} />
+              <SectionBody section={section} resetKey={resetKey} onNavigate={scrollToSection} />
             </section>
           )
         })}
