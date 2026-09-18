@@ -115,6 +115,11 @@ summary: 一句话摘要      # 不写则自动截取正文首段
   `TripTemplate.tsx` 的 `SectionBody` 加一个 `case`。
 - 顶部导航的短名默认取 `title`，太长了用 `navLabel` 覆盖；锚点按数组下标生成 `#s0` `#s1`…，
   所以结论卡里的 `link.anchor` 填 `#s2` 就跳到第 3 个小节。
+
+> **数据集里写 `#s2`，但页面里千万别渲染成 `<a href="#s2">`。** 站点是 `HashRouter`，
+> URL 上的 `#` 已经被路由占用，原生锚点会把 hash 改成 `#s2`、被解析成路径 `s2` 而落到 404。
+> `TripTemplate` 里导航和卡内跳转全是 `<button>` + 程序化 `window.scrollTo`。
+> 将来若换成 `BrowserRouter`，才可以用回原生锚点。
 - **meta 里别写正文**：它会被构建期抽成索引常驻首屏，正文只在点开时才下载。
 
 > 别在这个目录放 `.md` 文件——`lib/docs.ts` 会把它当成一篇文档扫进「最近更新」。
