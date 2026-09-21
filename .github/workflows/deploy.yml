@@ -23,6 +23,7 @@ concurrency:
 #   CUSTOM_DOMAIN     自定义域名，配了会在产物里写 CNAME，例如 hub.example.com
 #   SITE_URL          站点完整地址，构建期注入给 SEO / OG 用
 #   DEPLOY_PORT       自托管 SSH 端口，默认 22
+#   DEPLOY_ENABLED    填 true 才启用自托管同步（不能用 secrets 当开关，见 selfhost 处的注释）
 #
 #  密钥（secrets，敏感）
 #   DEPLOY_HOST       自托管服务器地址
@@ -85,10 +86,13 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
-  # 自托管同步：配齐 DEPLOY_* 三个密钥后才启用
+  # 自托管同步：仓库变量 DEPLOY_ENABLED=true 且配齐 DEPLOY_* 三个密钥后才启用。
+  # 开关必须用 vars 而不是 secrets —— job 级 if 的上下文里没有 secrets，
+  # 写成 secrets.XXX != '' 会让整个 workflow 文件判定为无效，
+  # 结果是每次 push 都留一条跑不起来的失败记录（见 GitHub 的 Invalid workflow file 注解）。
   selfhost:
     needs: build
-    if: ${{ secrets.DEPLOY_SSH_KEY != '' && secrets.DEPLOY_HOST != '' && secrets.DEPLOY_TARGET != '' }}
+    if: vars.DEPLOY_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
