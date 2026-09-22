@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { getNavItem, sectionItems } from '../config/nav'
-import { allDocs, countDocs, getRecentDocs } from '../lib/docs'
+import { allDocs, countDocs, getRecentDocs } from '../lib/docs/meta'
 import { getRecentTrips, travelMeta } from '../lib/travel/meta'
 import { usePrefersReducedMotion } from '../lib/usePrefersReducedMotion'
 import AnimatedContent from '../components/bits/AnimatedContent'
@@ -53,6 +53,7 @@ export default function Home() {
               <p className="home-eyebrow">
                 <span className="home-eyebrow-dot" aria-hidden="true" />
                 个人内容工作台
+                <span className="home-eyebrow-caret" aria-hidden="true" />
               </p>
               <h1 className="home-title">
                 {reduceMotion ? (

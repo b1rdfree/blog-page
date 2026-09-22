@@ -1,8 +1,10 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import AnimatedContent from '../components/bits/AnimatedContent'
 import { getNavItem, isSectionKey } from '../config/nav'
-import { getDoc, getSectionDocs } from '../lib/docs'
+import { getDocMeta, getSectionDocs } from '../lib/docs/meta'
+import { prefetchDoc } from '../lib/docs/content'
+import { useDoc } from '../lib/docs/useDoc'
 import DocList from '../components/DocList'
 import MarkdownView from '../components/MarkdownView'
 import NotFound from './NotFound'
@@ -19,33 +21,75 @@ export default function SectionPage() {
 
   if (navItem?.renderer === 'travel') {
     return (
-      <Suspense fallback={<div className="route-loading">加载中…</div>}>
+      <Suspense fallback={<div className="route-loading">LOADING…</div>}>
         <TravelSection section={section} slug={slug} />
       </Suspense>
     )
   }
 
-  const docs = getSectionDocs(section)
-  const active = slug ? getDoc(section, slug) : docs[0]
+  return (
+    <DocsSection
+      section={section}
+      slug={slug}
+      navLabel={navItem?.label ?? section}
+      navDesc={navItem?.desc}
+    />
+  )
+}
 
-  // 指定了文档却找不到，说明地址是错的，走 404 而不是「还没有内容」
-  if (slug && !active) return <NotFound />
+function DocsSection({
+  section,
+  slug,
+  navLabel,
+  navDesc,
+}: {
+  section: string
+  slug: string | undefined
+  navLabel: string
+  navDesc?: string
+}) {
+  const docs = getSectionDocs(section)
+  // 没带 slug 时默认打开第一篇
+  const activeMeta = slug ? getDocMeta(section, slug) : docs[0]
+
+  // 正文按需加载：meta 在构建期就有，hook 只负责把它对应的那份 .md 动态 import 进来
+  const { doc, loading, missing } = useDoc(activeMeta)
+
+  // 切换文档后回到顶部，否则会停在上一篇的滚动位置
+  useEffect(() => {
+    window.scrollTo({ top: 0 })
+  }, [section, slug])
+
+  // 指定了 slug 但 meta 里查不到 = 地址写错；或 .md 文件被删了 → 走 404
+  if ((slug && !activeMeta) || missing) return <NotFound />
 
   return (
     <div className="section-page">
       <aside className="section-aside">
         <div className="section-aside-head">
-          <h2 className="section-aside-title">{navItem?.label ?? section}</h2>
-          {navItem?.desc ? <p className="section-aside-desc">{navItem.desc}</p> : null}
+          <h2 className="section-aside-title">
+            <span className="section-aside-prompt" aria-hidden="true">
+              //
+            </span>
+            {navLabel}
+          </h2>
+          {navDesc ? <p className="section-aside-desc">{navDesc}</p> : null}
         </div>
-        <DocList section={section} docs={docs} activeSlug={active?.slug} />
+        <DocList
+          section={section}
+          docs={docs}
+          activeSlug={activeMeta?.slug}
+          onPrefetch={prefetchDoc}
+        />
       </aside>
 
       <section className="section-content">
-        {active ? (
+        {doc ? (
           <AnimatedContent distance={22} duration={0.55} className="section-content-inner">
-            <MarkdownView content={active.content} />
+            <MarkdownView content={doc.content} />
           </AnimatedContent>
+        ) : loading ? (
+          <div className="route-loading">LOADING…</div>
         ) : (
           <div className="empty-state">
             <h2>还没有内容</h2>
