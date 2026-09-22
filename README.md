@@ -22,23 +22,24 @@ pnpm lint                # ESLint 检查
 ```
 src/
 ├── config/nav.ts        # 菜单配置（唯一扩展点）
-├── lib/docs.ts          # 扫描 content 下的 md，解析 frontmatter
+├── lib/docs/            # 文档栏目：meta.ts 轻量索引 / content.ts 按需加载 / useDoc.ts
 ├── lib/travel/          # 旅游栏目：meta.ts 轻量索引 / dataset.ts 按需加载
 ├── layouts/MainLayout   # 顶部导航 + 内容区 + 页脚
 ├── components/
 │   ├── NavBar           # 顶部菜单
-│   ├── DocList          # 左侧文档列表
+│   ├── DocList          # 左侧文档列表（搜索 + hover 预取）
 │   ├── MarkdownView     # 右侧 Markdown 渲染
 │   └── travel/          # 旅游专用：TripList 搜索列表 + TripTemplate 行程模板
 ├── pages/
 │   ├── Home             # 首页：栏目卡片 + 最近更新
-│   ├── SectionPage      # 文档栏目页：左列表 + 右正文
+│   ├── SectionPage      # 栏目页：按 renderer 分流到 docs / travel 两套渲染
 │   ├── TravelSection    # 旅游栏目页：左搜索列表 + 右数据集模板
 │   └── NotFound
 └── content/             # 所有内容，按栏目分目录
     ├── code/            # .md 文档
     └── travel/          # .json 行程数据集
 build/
+├── docsIndexPlugin.ts   # 构建期扫描 content/*/*.md，生成 virtual:docs-index
 └── travelIndexPlugin.ts # 构建期扫描 travel/*.json，生成 virtual:travel-index
 ```
 
@@ -122,7 +123,9 @@ summary: 一句话摘要      # 不写则自动截取正文首段
 > 将来若换成 `BrowserRouter`，才可以用回原生锚点。
 - **meta 里别写正文**：它会被构建期抽成索引常驻首屏，正文只在点开时才下载。
 
-> 别在这个目录放 `.md` 文件——`lib/docs.ts` 会把它当成一篇文档扫进「最近更新」。
+> 文档栏目也是同样的三层拆分（见下文「按需加载」）：meta 抽索引、正文点击时才下载。
+> 列表搜索只覆盖标题 / 摘要 / 标签，不再搜正文片段——要搜正文得点开后用 Ctrl-F。
+> 别在这个目录放非 `.md` 文件——`docsIndexPlugin` 只认 `.md` 后缀。
 
 ## 加一个栏目
 
@@ -220,18 +223,21 @@ markdown 116.6 KB、ogl 12.9 KB 与背景层 4.3 KB 都改为按需下载：
 | 页面 | 加载的 chunk |
 | --- | --- |
 | `/` | index + react + anim + Plasma + LetterGlitch + plasma(ogl) |
-| `/#/code/xxx` | + SectionPage + markdown |
+| `/#/code/xxx` | + SectionPage + markdown + **该篇**文档正文（1~2 KB） |
 | `/#/travel/xxx` | + SectionPage + TravelSection + **该篇**数据集（1~3 KB） |
 
-**旅游栏目的三层拆分**（行程从 3 篇涨到 300 篇，首屏也不受影响）：
+**文档与旅游栏目的三层拆分**（文章 / 行程从几篇涨到几百篇，首屏也不受影响）：
 
-1. **索引**：`build/travelIndexPlugin.ts` 在构建期扫描 `src/content/travel/*.json`，
-   只抽 `meta` 生成虚拟模块 `virtual:travel-index`。左侧列表靠它搜索，
-   体积恒定在几百字节，不随行程数增长。
-2. **模板**：`TravelSection`（组件 + 9 KB CSS，gzip 2.2）由 `SectionPage` 按需 `lazy()`，
-   不进旅游页就不下载。
-3. **数据集**：`dataset.ts` 用**非 eager** 的 `import.meta.glob`，每份 `.json` 单独成 chunk，
-   只有点开那一篇才下载；鼠标 hover 列表项时 `prefetchTrip()` 会提前取，点开基本零等待。
+1. **索引**：`build/docsIndexPlugin.ts` 与 `build/travelIndexPlugin.ts` 在构建期扫描
+   `src/content/*/*.md` 与 `src/content/travel/*.json`，只抽 meta 生成虚拟模块
+   `virtual:docs-index` / `virtual:travel-index`。左侧列表靠它搜索，
+   体积恒定在几百字节，不随文章数增长。
+2. **模板**：`MarkdownView`（依赖 react-markdown / highlight.js）与
+   `TravelSection`（组件 + 9 KB CSS，gzip 2.2）由 `SectionPage` 按需 `lazy()`，
+   不进对应页就不下载。
+3. **正文 / 数据集**：`lib/docs/content.ts` 与 `lib/travel/dataset.ts` 用**非 eager**
+   的 `import.meta.glob`，每份 `.md` / `.json` 单独成 chunk，只有点开那一篇才下载；
+   鼠标 hover 列表项时 `prefetchDoc()` / `prefetchTrip()` 会提前取，点开基本零等待。
 
 > 新增依赖后建议跑一次 `pnpm build` 看产物表，确认没有东西意外落回首屏。
 

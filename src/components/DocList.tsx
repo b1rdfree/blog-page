@@ -1,24 +1,24 @@
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
-import type { Doc } from '../lib/docs'
+import type { DocMeta } from '../lib/docs/types'
 
 type Props = {
   section: string
-  docs: Doc[]
+  docs: DocMeta[]
   activeSlug?: string
+  /** hover / focus 时把正文提前下载好，点开几乎不用等 */
+  onPrefetch?: (section: string, slug: string) => void
   /** 少于这个篇数就不显示搜索框，省得只有两三篇时还占一行 */
   searchThreshold?: number
 }
 
 /**
  * 参与搜索的文本。
- * 正文 content 已经在内存里（构建期 eager 导入），拿它一起做匹配不额外花代价，
- * 但搜索体验差别很大——在代码栏目里可以直接搜 `docker run` 这样的片段。
+ * 正文是按需加载的，列表里只有 meta，所以只搜标题 / 摘要 / 标签 / slug——
+ * 和旅游列表一致。要搜正文片段得等点开后在正文里 Ctrl-F。
  */
-function haystackOf(doc: Doc): string {
-  return [doc.title, doc.summary, doc.slug, doc.tags.join(' '), doc.content]
-    .join('\n')
-    .toLowerCase()
+function haystackOf(doc: DocMeta): string {
+  return [doc.title, doc.summary, doc.slug, doc.tags.join(' ')].join('\n').toLowerCase()
 }
 
 function escapeRegExp(text: string): string {
@@ -50,6 +50,7 @@ export default function DocList({
   section,
   docs,
   activeSlug,
+  onPrefetch,
   searchThreshold = 3,
 }: Props) {
   const [query, setQuery] = useState('')
@@ -101,7 +102,7 @@ export default function DocList({
             onKeyDown={(event) => {
               if (event.key === 'Escape') setQuery('')
             }}
-            placeholder="搜标题、标签、正文…"
+            placeholder="搜标题、标签…"
             aria-label={`搜索${section}栏目文档`}
           />
           {query ? (
@@ -136,6 +137,8 @@ export default function DocList({
               className={({ isActive }) =>
                 isActive || doc.slug === activeSlug ? 'doc-item is-active' : 'doc-item'
               }
+              onMouseEnter={() => onPrefetch?.(section, doc.slug)}
+              onFocus={() => onPrefetch?.(section, doc.slug)}
             >
               <span className="doc-item-title">
                 <Highlight text={doc.title} tokens={tokens} />

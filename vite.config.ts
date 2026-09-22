@@ -2,10 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { fileURLToPath, URL } from 'node:url'
 import { travelIndexPlugin } from './build/travelIndexPlugin.ts'
+import { docsIndexPlugin } from './build/docsIndexPlugin.ts'
 
 export default defineConfig({
   plugins: [
     react(),
+    // 构建期扫描所有栏目的 .md，只抽 frontmatter 生成轻量索引（详见 build/docsIndexPlugin.ts）
+    docsIndexPlugin(fileURLToPath(new URL('./src/content', import.meta.url))),
     // 扫描旅行数据集，构建期生成轻量索引（详见 build/travelIndexPlugin.ts）
     travelIndexPlugin(fileURLToPath(new URL('./src/content/travel', import.meta.url))),
   ],
