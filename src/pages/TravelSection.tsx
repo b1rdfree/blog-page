@@ -42,7 +42,12 @@ export default function TravelSection({ section, slug }: Props) {
     <div className="section-page">
       <aside className="section-aside">
         <div className="section-aside-head">
-          <h2 className="section-aside-title">{navItem?.label ?? section}</h2>
+          <h2 className="section-aside-title">
+            <span className="section-aside-prompt" aria-hidden="true">
+              //
+            </span>
+            {navItem?.label ?? section}
+          </h2>
           {navItem?.desc ? <p className="section-aside-desc">{navItem.desc}</p> : null}
         </div>
         <TripList
@@ -57,7 +62,7 @@ export default function TravelSection({ section, slug }: Props) {
         {data ? (
           <TripTemplate dataset={data} resetKey={activeSlug ?? ''} />
         ) : loading ? (
-          <div className="trip-loading">加载中…</div>
+          <div className="trip-loading">LOADING…</div>
         ) : (
           <div className="empty-state">
             <h2>还没有行程</h2>

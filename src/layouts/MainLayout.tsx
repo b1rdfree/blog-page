@@ -14,7 +14,7 @@ export default function MainLayout() {
         <NavBar />
         <main className="app-main">
           {/* 路由级按需加载的落点：NavBar 常驻，只替换内容区 */}
-          <Suspense fallback={<div className="route-loading">加载中…</div>}>
+          <Suspense fallback={<div className="route-loading">LOADING…</div>}>
             <Outlet />
           </Suspense>
         </main>
