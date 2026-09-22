@@ -202,6 +202,54 @@ pre {
     #0b0812;
 }
 
+/* 星空层 canvas：铺满背景容器（绝对定位在 .site-bg 内、.site-glitch 之下） */
+.starfield-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* CRT 扫描线：整屏 2px 间隔的暗色横纹 + 一条缓慢下移的扫描光带，
+   给全站叠上"老式太空舱显示器"的质感。纯 CSS 静态纹理 + 单个渐变动画，
+   首帧后由合成器接管，不占用主线程；reduced-motion 下停掉光带动画。 */
+.site-scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.09) 0px,
+    rgba(0, 0, 0, 0.09) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+.site-scanlines::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 18vh;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(167, 139, 250, 0.05) 45%,
+    rgba(34, 211, 238, 0.04) 55%,
+    transparent
+  );
+  animation: scan-sweep 8s linear infinite;
+}
+
+@keyframes scan-sweep {
+  0% {
+    transform: translateY(-20vh);
+  }
+  100% {
+    transform: translateY(110vh);
+  }
+}
+
 /* 压暗四周：文档页正文量大，边缘收暗才能让内容凸显 */
 .site-bg::after {
   content: '';
@@ -274,6 +322,29 @@ pre {
   color: #cbbcff;
   font-size: 12px;
   letter-spacing: 2px;
+}
+
+/* 终端光标：跟在眉标文字后面的闪烁方块，"系统待命"的味道。
+   纯 CSS 动画，一个元素零 JS 成本。 */
+.home-eyebrow-caret {
+  display: inline-block;
+  width: 8px;
+  height: 13px;
+  margin-left: 2px;
+  background: #a78bfa;
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.8);
+  animation: caret-blink 1.1s steps(1) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .home-eyebrow-dot {
@@ -479,14 +550,58 @@ pre {
   color: #fff;
 }
 
-/* 路由级按需加载的占位，避免切页时内容区塌陷跳动 */
+/* 路由级按需加载的占位，避免切页时内容区塌陷跳动。
+   做成终端输出样式：等宽字体 + 打字机动画 + 闪烁光标。 */
 .route-loading {
   min-height: 220px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ink-faint);
-  font-size: 14px;
+  color: #22d3ee;
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.35em;
+}
+
+.route-loading::before,
+.route-loading::after {
+  content: '';
+  width: 8px;
+  height: 14px;
+  background: currentColor;
+  opacity: 0.75;
+}
+
+.route-loading::before {
+  margin-right: 4px;
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+.route-loading::after {
+  margin-left: 4px;
+  animation: caret-blink 1s steps(1) infinite;
+}
+
+/* 打字机循环：文字从 0 宽度逐字"打"出来再消失 */
+@keyframes terminal-typing {
+  0% {
+    width: 0;
+  }
+  40% {
+    width: 7.7em;
+  }
+  80% {
+    width: 7.7em;
+  }
+  100% {
+    width: 0;
+  }
+}
+
+.route-loading {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: terminal-typing 2.4s ease-in-out infinite;
 }
 
 .recent-item-meta {
@@ -539,6 +654,15 @@ pre {
   font-size: 12.5px;
 }
 
+/* 终端式 "//" 提示符：青色等宽前缀，暗示这是一个可输入的控制台栏目 */
+.section-aside-prompt {
+  margin-right: 7px;
+  color: #22d3ee;
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 14px;
+  opacity: 0.85;
+}
+
 /* 搜索框和计数固定在上层，只有结果列表滚动 */
 .doc-list-wrap {
   display: flex;
@@ -568,7 +692,10 @@ pre {
 }
 
 .doc-item.is-active {
+  position: relative;
   background: var(--accent-soft);
+  /* 当前项左边缘一道亮线：像终端里被选中的那一行 */
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .doc-item-title {
@@ -729,6 +856,34 @@ pre {
   font-size: 14px;
 }
 
+/* ---------- 404：终端报错风格 ---------- */
+.nf-code {
+  margin: 0 0 6px;
+  color: #f472b6;
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.3em;
+}
+
+.nf-detail {
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.nf-link {
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+}
+
+.nf-caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  margin-left: 6px;
+  vertical-align: -2px;
+  background: #fff;
+  animation: caret-blink 1s steps(1) infinite;
+}
+
 /* ---------- Markdown 正文 ---------- */
 .markdown-body {
   font-size: 15px;
@@ -856,7 +1011,13 @@ pre {
    Plasma 背景自身会停在首帧（组件内已判断），所以不清掉，留一张静态氛围图。 */
 @media (prefers-reduced-motion: reduce) {
   .home-scroll-line,
-  .home-eyebrow-dot {
+  .home-eyebrow-dot,
+  .home-eyebrow-caret,
+  .nf-caret,
+  .route-loading::before,
+  .route-loading::after,
+  .route-loading,
+  .site-scanlines::after {
     animation: none;
   }
 

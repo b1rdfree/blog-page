@@ -735,10 +735,30 @@ button.trip-inline-link:hover {
 
 /* ---------- 右侧内容加载态 ---------- */
 
+/* 与 global.css 的 .route-loading 同款终端打字样式 */
 .trip-loading {
   padding: 64px 24px;
   text-align: center;
-  color: var(--ink-soft);
+  color: #22d3ee;
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.35em;
+  overflow: hidden;
+  white-space: nowrap;
+  animation: terminal-typing 2.4s ease-in-out infinite;
+}
+
+.trip-loading::before,
+.trip-loading::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  margin: 0 4px;
+  vertical-align: -2px;
+  background: currentColor;
+  opacity: 0.75;
+  animation: caret-blink 1s steps(1) infinite;
 }
 
 /* ---------- 响应式 ---------- */
