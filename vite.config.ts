@@ -40,9 +40,8 @@ export default defineConfig({
               priority: 15,
             },
             {
-              // ogl 单独成组：它只被异步加载的 Plasma 背景引用，
-              // 混进 anim 会被首页首屏一起 preload。
-              name: 'plasma',
+              // 全站背景在 load + idle 后加载，OGL 不进入首屏依赖。
+              name: 'background',
               test: /[\\/]node_modules[\\/]ogl[\\/]/,
               priority: 16,
             },

@@ -2,19 +2,19 @@
  * 旅行模板样式。
  *
  * 结构 / 交互仿照参考页（编号章节 + sticky 锚点导航 + 结论卡 + 高亮表格 +
- * 逐日时间轴），配色改为适配本站深色玻璃拟态：青=推荐、琥珀=注意、朱红=劝退、
- * 紫=关键。语义色沿用参考页的四色分工，只是提亮到深色底上可读。
+ * 逐日时间轴），配色适配本站昼夜主题：青=推荐、琥珀=注意、朱红=劝退、
+ * 紫=关键。语义色沿用参考页的四色分工，根据昼夜底色调整对比度。
  *
  * 本文件只被异步加载的 TravelSection 引入，因此不会进首屏样式。
  */
 
 .trip-page {
-  --trip-teal: #4fd1c5;
+  --trip-teal: var(--signal);
   --trip-amber: #e8a33d;
   --trip-red: #f2777a;
-  --trip-violet: #b49bff;
-  --trip-surface: rgba(255, 255, 255, 0.035);
-  --trip-surface-hi: rgba(255, 255, 255, 0.06);
+  --trip-violet: var(--accent);
+  --trip-surface: var(--wash);
+  --trip-surface-hi: var(--signal-soft);
 
   color: var(--ink);
   line-height: 1.75;
@@ -71,9 +71,9 @@
   z-index: 5;
   margin: 0 -36px;
   padding: 0 36px;
-  background: rgba(11, 8, 18, 0.94);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  background: var(--surface-solid);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-bottom: 1px solid var(--line);
 }
 
@@ -104,7 +104,7 @@
 }
 
 .trip-nav-inner button:hover {
-  background: var(--trip-surface-hi);
+  background: var(--trip-surface-hi, var(--wash));
   color: var(--ink);
 }
 
@@ -194,7 +194,7 @@ button.trip-inline-link:hover {
 .trip-card {
   padding: 14px 16px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--trip-surface);
 }
 
@@ -234,7 +234,7 @@ button.trip-inline-link:hover {
   padding: 14px 16px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--trip-surface);
 }
 
@@ -296,7 +296,7 @@ button.trip-inline-link:hover {
 .trip-tblwrap {
   overflow-x: auto;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--trip-surface);
 }
 
@@ -345,7 +345,7 @@ button.trip-inline-link:hover {
 
 .trip-day {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--trip-surface);
   overflow: hidden;
 }
@@ -443,7 +443,7 @@ button.trip-inline-link:hover {
 .trip-callout {
   padding: 14px 16px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--trip-surface);
 }
 
@@ -492,7 +492,7 @@ button.trip-inline-link:hover {
 .trip-stat {
   padding: 12px 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius);
   background: var(--trip-surface);
   text-align: center;
 }
@@ -538,7 +538,7 @@ button.trip-inline-link:hover {
   flex: 1;
   height: 4px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--line);
   overflow: hidden;
 }
 
@@ -582,7 +582,7 @@ button.trip-inline-link:hover {
 }
 
 .trip-check:hover {
-  background: var(--trip-surface-hi);
+  background: var(--trip-surface-hi, var(--wash));
 }
 
 .trip-check input {
@@ -614,7 +614,7 @@ button.trip-inline-link:hover {
 
 .trip-search {
   position: relative;
-  padding: 0 11px 10px;
+  padding: 10px 11px;
 }
 
 .trip-search-input {
@@ -622,7 +622,7 @@ button.trip-inline-link:hover {
   padding: 8px 30px 8px 11px;
   border: 1px solid var(--line);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--wash);
   color: var(--ink);
   font-size: 13.5px;
   font-family: inherit;
@@ -636,7 +636,7 @@ button.trip-inline-link:hover {
 
 .trip-search-input:focus {
   border-color: rgba(180, 155, 255, 0.55);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--line);
 }
 
 .trip-search-input::-webkit-search-cancel-button {
@@ -659,7 +659,7 @@ button.trip-inline-link:hover {
 }
 
 .trip-search-clear:hover {
-  background: var(--trip-surface-hi);
+  background: var(--trip-surface-hi, var(--wash));
   color: var(--ink);
 }
 
@@ -695,7 +695,7 @@ button.trip-inline-link:hover {
 }
 
 .trip-facet:hover {
-  background: var(--trip-surface-hi);
+  background: var(--trip-surface-hi, var(--wash));
 }
 
 .trip-facet.is-active {
@@ -728,37 +728,9 @@ button.trip-inline-link:hover {
 .trip-item-chip {
   padding: 0 7px;
   border-radius: 999px;
-  background: var(--trip-surface-hi);
+  background: var(--trip-surface-hi, var(--wash));
   color: var(--ink-faint);
   font-size: 11px;
-}
-
-/* ---------- 右侧内容加载态 ---------- */
-
-/* 与 global.css 的 .route-loading 同款终端打字样式 */
-.trip-loading {
-  padding: 64px 24px;
-  text-align: center;
-  color: #22d3ee;
-  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 13px;
-  letter-spacing: 0.35em;
-  overflow: hidden;
-  white-space: nowrap;
-  animation: terminal-typing 2.4s ease-in-out infinite;
-}
-
-.trip-loading::before,
-.trip-loading::after {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 14px;
-  margin: 0 4px;
-  vertical-align: -2px;
-  background: currentColor;
-  opacity: 0.75;
-  animation: caret-blink 1s steps(1) infinite;
 }
 
 /* ---------- 响应式 ---------- */
@@ -778,3 +750,15 @@ button.trip-inline-link:hover {
     grid-template-columns: 48px minmax(0, 1fr);
   }
 }
+
+/* Shared console controls and semantic colours remain consistent across sections. */
+.trip-nav-inner button { border-radius: 5px; }
+.trip-nav-inner button.is-active { color: var(--signal); background: var(--signal-soft); box-shadow: inset 0 -1px var(--signal); }
+.trip-facet.is-active { color: var(--signal); border-color: rgba(121,226,237,.4); background: var(--signal-soft); }
+.trip-search-input:focus { border-color: var(--signal); }
+.trip-sec-num { font-family: var(--font-mono); border: 1px solid var(--line); background: transparent; color: var(--signal); border-radius: 4px; }
+.trip-checklist-bar-fill { background: linear-gradient(90deg, var(--accent), var(--signal)); }
+.trip-day-hd { background: var(--signal-soft); }
+.trip-tm { font-family: var(--font-mono); }
+
+[data-theme="light"] .trip-page { --trip-amber: #926000; --trip-red: #b63d4a; }

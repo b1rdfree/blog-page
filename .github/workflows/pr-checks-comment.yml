@@ -1,0 +1,49 @@
+name: PR Checks Comment
+
+on:
+  workflow_run:
+    workflows: ['PR Checks']
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+
+# 同一次检查的重复通知串行处理，防止重复发布评论。
+concurrency:
+  group: pr-check-comment-${{ github.event.workflow_run.id }}
+  cancel-in-progress: false
+
+jobs:
+  comment:
+    if: ${{ github.event.workflow_run.event == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # workflow_run 使用默认分支的工作流；只检出该受信任版本，绝不检出 PR head。
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Download check logs
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: pr-check-logs-${{ github.event.workflow_run.run_attempt }}
+          path: ${{ runner.temp }}/pr-check-logs
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      # 即使依赖安装失败或没有产物，也根据 GitHub 的实际步骤状态发布结果。
+      # 产物仅作为纯文本读取，不执行、不用于选择 PR 或决定检查是否通过。
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        env:
+          LOG_DIR: ${{ runner.temp }}/pr-check-logs
+        with:
+          script: |
+            const { postComment } = require('./.github/scripts/pr-check-comment.cjs');
+            await postComment({ github, context, core, logDir: process.env.LOG_DIR });

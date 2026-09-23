@@ -1,0 +1,224 @@
+.section-page {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+/* 统一阅读面板：用高不透明底色保证可读性，不做大面积背景模糊。 */
+.section-aside {
+  position: sticky;
+  top: 84px;
+  max-height: calc(100vh - 108px);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  /* 高不透明面板保证正文可读，避免大面积动态背景模糊。 */
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.section-aside-head {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.section-aside-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.section-aside-desc {
+  margin: 4px 0 0;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+}
+
+/* 终端式 "//" 提示符：青色等宽前缀，暗示这是一个可输入的控制台栏目 */
+.section-aside-prompt {
+  margin-right: 7px;
+  color: var(--signal);
+  font-family: var(--font-mono, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* 搜索框和计数固定在上层，只有结果列表滚动 */
+.doc-list-wrap {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.doc-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.doc-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 11px;
+  border-radius: 8px;
+  color: var(--ink);
+}
+
+.doc-item:hover {
+  background: rgba(167, 139, 250, 0.14);
+}
+
+.doc-item.is-active {
+  position: relative;
+  background: var(--accent-soft);
+  /* 当前项左边缘一道亮线：像终端里被选中的那一行 */
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.doc-item-title {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.doc-item-summary {
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.doc-item-meta {
+  display: flex;
+  gap: 8px;
+  color: var(--ink-faint);
+  font-size: 11px;
+}
+
+.doc-item-tags {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-list-empty {
+  padding: 16px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.doc-list-empty-hint {
+  color: var(--ink-faint);
+  font-size: 12px;
+}
+
+/* ---------- 文档列表搜索 ---------- */
+.doc-search {
+  position: relative;
+  padding: 10px 11px 6px;
+}
+
+.doc-search-input {
+  width: 100%;
+  padding: 8px 30px 8px 11px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--wash);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.doc-search-input::placeholder {
+  color: var(--ink-faint);
+}
+
+.doc-search-input:focus {
+  border-color: rgba(180, 155, 255, 0.55);
+  background: var(--wash);
+}
+
+/* 自带的清除按钮换成下面那个圆形的，位置更好控 */
+.doc-search-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.doc-search-clear {
+  position: absolute;
+  top: 15px;
+  right: 17px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.doc-search-clear:hover {
+  background: var(--wash);
+  color: var(--ink);
+}
+
+.doc-search-count {
+  margin: 0;
+  padding: 0 12px 6px;
+  color: var(--ink-faint);
+  font-size: 11.5px;
+}
+
+.doc-search-empty {
+  margin: 0;
+  padding: 12px 20px 20px;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+}
+
+.doc-mark {
+  border-radius: 2px;
+  background: rgba(180, 155, 255, 0.3);
+  color: inherit;
+}
+
+.section-content {
+  min-width: 0;
+  padding: 32px 36px 48px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  /* 阅读区使用更实的统一底色。 */
+  background: var(--surface-solid);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: var(--shadow);
+}
+
+.doc-item { transition: background 160ms; }
+.doc-item.is-active { background: var(--signal-soft); box-shadow: inset 2px 0 var(--signal); }
+.doc-item.is-active .doc-item-title { color: var(--signal); }
+.doc-search-input:focus { border-color: var(--signal); }
+.doc-mark { background: rgba(121,226,237,.2); }
+
+@media (max-width: 900px) {
+  .section-page { grid-template-columns: 1fr; gap: 16px; }
+  .section-aside { position: static; max-height: none; }
+  .doc-list { max-height: 240px; }
+  .section-content { padding: 24px 18px 36px; }
+}
+
+@media print { .section-page { display: block; } }

@@ -12,8 +12,9 @@ import sql from 'highlight.js/lib/languages/sql'
 import typescript from 'highlight.js/lib/languages/typescript'
 import xml from 'highlight.js/lib/languages/xml'
 import yaml from 'highlight.js/lib/languages/yaml'
-// 全站深色主题，代码高亮也要跟着换成深色，否则亮色代码块会非常刺眼
+// 以 GitHub Dark 为基底；markdown.css 统一补充白天模式的 token 配色。
 import 'highlight.js/styles/github-dark.css'
+import '../styles/markdown.css'
 
 // 只注册会用到的语言，避免把 highlight.js 全量语言打进包里
 const languages = {

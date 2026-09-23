@@ -1,0 +1,134 @@
+/* ---------- Markdown 正文 ---------- */
+.markdown-body {
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.markdown-body > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-body h1 {
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.markdown-body h2 {
+  margin: 32px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.markdown-body h3 {
+  margin: 24px 0 8px;
+  font-size: 16.5px;
+  font-weight: 600;
+}
+
+.markdown-body p {
+  margin: 12px 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin: 12px 0;
+  padding-left: 22px;
+}
+
+.markdown-body li {
+  margin: 4px 0;
+}
+
+.markdown-body blockquote {
+  margin: 16px 0;
+  padding: 8px 16px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink-soft);
+  border-radius: 0 8px 8px 0;
+}
+
+.markdown-body :not(pre) > code {
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(167, 139, 250, 0.16);
+  color: var(--accent-deep);
+  font-size: 13px;
+}
+
+.markdown-body pre {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  /* github-dark 的 token 配色是给 #0d1117 设计的，这里给一层略深的底让它融入 */
+  background: rgba(0, 0, 0, 0.42);
+  overflow-x: auto;
+}
+
+.markdown-body pre code {
+  font-size: 13px;
+  line-height: 1.65;
+  background: transparent;
+}
+
+/* highlight.js 的 github-dark 会自带不透明底色，盖掉才能透出玻璃质感。
+   只清背景，token 的前景色（关键字/字符串等）保持主题原样。 */
+.markdown-body pre code.hljs {
+  background: transparent;
+  padding: 0;
+}
+
+.markdown-body table {
+  width: 100%;
+  margin: 16px 0;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.markdown-body th,
+.markdown-body td {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.markdown-body th {
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.markdown-body hr {
+  margin: 28px 0;
+  border: none;
+  border-top: 1px solid var(--line);
+}
+
+.markdown-body img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+
+.markdown-body h2 { border-bottom-style: dashed; }
+.markdown-body pre { border-left: 2px solid rgba(121,226,237,.4); border-radius: 5px; }
+.markdown-body blockquote { border-left-color: var(--signal); background: var(--signal-soft); }
+
+[data-theme="light"] .markdown-body pre { background: #f4f7fb; }
+[data-theme="light"] .markdown-body .hljs { color: #243b53; }
+[data-theme="light"] .markdown-body :is(.hljs-comment, .hljs-quote, .hljs-code, .hljs-formula) { color: #63758a; }
+[data-theme="light"] .markdown-body :is(.hljs-keyword, .hljs-doctag, .hljs-template-tag, .hljs-template-variable, .hljs-type) { color: #a62648; }
+[data-theme="light"] .markdown-body .hljs-title { color: #6943a9; }
+[data-theme="light"] .markdown-body :is(.hljs-string, .hljs-regexp) { color: #12654b; }
+[data-theme="light"] .markdown-body :is(.hljs-number, .hljs-literal, .hljs-attr, .hljs-attribute, .hljs-operator, .hljs-variable, .hljs-built_in, .hljs-selector-attr, .hljs-selector-id) { color: #145da0; }
+[data-theme="light"] .markdown-body :is(.hljs-meta, .hljs-symbol, .hljs-bullet, .hljs-selector-tag, .hljs-selector-class, .hljs-selector-pseudo, .hljs-name) { color: #096b76; }
+[data-theme="light"] .markdown-body :is(.hljs-subst, .hljs-emphasis, .hljs-strong) { color: #243b53; }
+[data-theme="light"] .markdown-body .hljs-addition { color: #12654b; background: #e3f3e9; }
+[data-theme="light"] .markdown-body .hljs-deletion { color: #a62648; background: #fce8eb; }
