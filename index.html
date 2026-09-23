@@ -4,12 +4,22 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nonight Hub</title>
-    <meta name="description" content="个人工作台：代码笔记与旅游行程" />
-    <meta name="theme-color" content="#0b0812" />
+    <meta name="description" content="个人内容空间：收藏经验、记录发现、连接灵感" />
+    <meta name="theme-color" content="#080d17" />
+    <script>
+      // 在样式与 React 渲染前确定主题，避免刷新时闪烁。
+      (() => {
+        let saved;
+        try { saved = localStorage.getItem('nonight-theme'); } catch {}
+        const theme = saved === 'light' || saved === 'dark' ? saved : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#080d17' : '#f2f6fb';
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Nonight Hub" />
-    <meta property="og:description" content="个人工作台：代码笔记与旅游行程" />
+    <meta property="og:description" content="个人内容空间：收藏经验、记录发现、连接灵感" />
     <meta name="twitter:card" content="summary" />
   </head>
   <body>

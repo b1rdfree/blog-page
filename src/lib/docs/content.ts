@@ -57,7 +57,7 @@ export function prefetchDoc(section: string, slug: string): void {
 export async function loadDoc(meta: DocMeta): Promise<Doc | null> {
   const key = keyOf(meta.section, meta.slug)
   const hit = cache.get(key)
-  if (hit) return { ...meta, content: hit }
+  if (hit !== undefined) return { ...meta, content: hit }
 
   const load = loaderOf(meta.section, meta.slug)
   if (!load) return null

@@ -1,0 +1,65 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# PR 代码只持有只读令牌；评论由独立的受信任工作流发布。
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Quality checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CI: 'true'
+      NO_COLOR: '1'
+    defaults:
+      run:
+        # pipefail 保证 tee 保存日志时不吞掉检查的非零退出码。
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        id: install
+        run: |
+          mkdir -p "$RUNNER_TEMP/pr-check-logs"
+          pnpm install --frozen-lockfile 2>&1 | tee "$RUNNER_TEMP/pr-check-logs/install.log"
+
+      # 显式状态条件确保前一项失败时，其余检查仍然运行。
+      - name: TypeScript
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm typecheck --pretty false 2>&1 | tee "$RUNNER_TEMP/pr-check-logs/typecheck.log"
+
+      - name: ESLint
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm lint 2>&1 | tee "$RUNNER_TEMP/pr-check-logs/lint.log"
+
+      - name: Tests
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm test 2>&1 | tee "$RUNNER_TEMP/pr-check-logs/tests.log"
+
+      - name: CI reporter tests
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: pnpm test:ci 2>&1 | tee "$RUNNER_TEMP/pr-check-logs/reporter-tests.log"
+
+      - name: Upload check logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-check-logs-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/pr-check-logs/*.log
+          if-no-files-found: ignore
+          retention-days: 7

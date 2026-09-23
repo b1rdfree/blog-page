@@ -15,6 +15,8 @@ export type NavItem = {
   desc: string
   /** 可选：菜单右上角小标记 */
   badge?: string
+  /** 首页插画风格；不配置时自动使用通用内容卡片，与渲染器独立。 */
+  visual?: 'terminal' | 'landscape'
   /**
    * 栏目用哪套渲染器：
    * - 缺省 / 'docs'：src/content/<key>/*.md，走 Markdown 文档阅读器
@@ -33,11 +35,13 @@ export const navItems: NavItem[] = [
   },
   {
     key: 'code',
+    visual: 'terminal',
     label: '代码',
     desc: '开发笔记、配置片段与踩坑记录',
   },
   {
     key: 'travel',
+    visual: 'landscape',
     label: '旅游',
     desc: '行程方案、路线与实用信息',
     renderer: 'travel',

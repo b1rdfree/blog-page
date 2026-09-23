@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { getNavItem } from '../config/nav'
 import TripList from '../components/travel/TripList'
 import TripTemplate from '../components/travel/TripTemplate'
+import ContentError from '../components/ContentError'
+import ContentBoundary from '../components/ContentBoundary'
 import { prefetchTrip } from '../lib/travel/dataset'
 import { getTripMeta, travelMeta } from '../lib/travel/meta'
 import { useTrip } from '../lib/travel/useTrip'
@@ -27,7 +29,7 @@ export default function TravelSection({ section, slug }: Props) {
 
   // 没带 slug 时默认打开第一篇
   const activeSlug = slug ?? items[0]?.slug
-  const { data, loading, missing } = useTrip(activeSlug)
+  const { data, loading, missing, error, retry } = useTrip(activeSlug)
 
   // 切换行程后回到顶部，否则会停在上一条行程的滚动位置
   useEffect(() => {
@@ -59,10 +61,12 @@ export default function TravelSection({ section, slug }: Props) {
       </aside>
 
       <section className="section-content">
-        {data ? (
-          <TripTemplate dataset={data} resetKey={activeSlug ?? ''} />
+        {error ? <ContentError kind={error} onRetry={retry} /> : data ? (
+          <ContentBoundary key={activeSlug}>
+            <TripTemplate dataset={data} resetKey={activeSlug ?? ''} />
+          </ContentBoundary>
         ) : loading ? (
-          <div className="trip-loading">LOADING…</div>
+          <div className="trip-loading" role="status">LOADING…</div>
         ) : (
           <div className="empty-state">
             <h2>还没有行程</h2>
